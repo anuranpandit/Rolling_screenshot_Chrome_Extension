@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Rolling Screenshot (v3)</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 12px; width: 260px; }
+      button { margin: 6px 0; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%; }
+      #status { margin-top: 8px; font-size: 13px; color: #222; min-height: 20px; }
+      #info { margin-top: 8px; font-size: 12px; color: #444; }
+    </style>
+  </head>
+  <body>
+    <h3 style="margin:6px 0 8px 0;">Rolling Screenshot (v3)</h3>
+    <button id="startBtn">Capture & Start</button>
+    <button id="scrollBtn">Scroll (auto) & Capture</button>
+    <button id="endBtn">End & Download</button>
+    <div id="status">Ready.</div>
+    <div id="info">This version **crops out** sticky/fixed headers and footers per-capture and scrolls by the cropped height so stitching is seamless.</div>
+    <script src="popup.js"></script>
+  </body>
+</html>
