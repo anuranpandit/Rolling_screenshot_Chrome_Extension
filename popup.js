@@ -1,3 +1,4 @@
+/*
 // popup.js - Rolling Screenshot v3
 let chunks = []; // each chunk: {dataUrl, width, height}
 let lastMetrics = null; // metrics from last capture (viewportHeight, topOverlay, bottomOverlay, dpr, maxScrollTop)
@@ -212,5 +213,98 @@ endBtn.addEventListener('click', async () => {
     console.error(e);
     alert('Stitching error: ' + (e.message || e));
     setStatus('Stitching error');
+  }
+});
+*/
+
+
+
+// popup.js
+// Wires UI buttons to our modules
+
+import { setStatus, getActiveTab, delay } from './utils.js';
+import { captureAndCrop } from './capture.js';
+import { scrollBy } from './metrics.js';
+import { stitchAndDownload } from './stitch.js';
+
+const startBtn  = document.getElementById('startBtn');
+const scrollBtn = document.getElementById('scrollBtn');
+const endBtn    = document.getElementById('endBtn');
+
+let chunks = [];
+let lastMetrics = null;
+
+console.log('popup.js loaded');
+
+// START
+startBtn.addEventListener('click', async () => {
+    alert("Start capture");
+  try {
+    const tab = await getActiveTab();
+    chunks = [];
+    lastMetrics = null;
+    setStatus('Starting capture…');
+    const { metrics, chunk } = await captureAndCrop(tab);
+    chunks.push(chunk);
+    lastMetrics = metrics;
+    scrollBtn.disabled = false;
+    endBtn.disabled = false;
+    setStatus('First chunk captured. Scroll & capture next.');
+  } catch (e) {
+    console.error(e);
+    setStatus('Start error');
+  }
+});
+
+// SCROLL & CAPTURE
+scrollBtn.addEventListener('click', async () => {
+    alert("Scroll");
+  if (!lastMetrics) {
+    alert('Please start capture first.');
+    return;
+  }
+  try {
+    const tab = await getActiveTab();
+    const step = Math.max(
+      1,
+      lastMetrics.viewportHeight - lastMetrics.topOverlay - lastMetrics.bottomOverlay
+    );
+
+    setStatus(`Scrolling by ${step}px…`);
+    const { newY, maxScrollTop } = await scrollBy(step, tab.id);
+
+    await delay(550); // allow lazy loads
+    const { metrics, chunk } = await captureAndCrop(tab);
+    chunks.push(chunk);
+    lastMetrics = metrics;
+
+    if (newY >= maxScrollTop) {
+      setStatus('Reached bottom. Click End to download.');
+    } else {
+      setStatus(`Captured at ${Math.round(newY)} of ${Math.round(maxScrollTop)}.`);
+    }
+  } catch (e) {
+    console.error(e);
+    setStatus('Scroll error');
+  }
+});
+
+// END & DOWNLOAD
+endBtn.addEventListener('click', async () => {
+  alert("end");
+  if (!chunks.length) {
+    alert('No screenshots to stitch.');
+    return;
+  }
+  try {
+    await stitchAndDownload(chunks);
+    // reset UI
+    chunks = [];
+    lastMetrics = null;
+    scrollBtn.disabled = true;
+    endBtn.disabled    = true;
+  } catch (e) {
+    console.error(e);
+    setStatus('Stitch error');
   }
 });
